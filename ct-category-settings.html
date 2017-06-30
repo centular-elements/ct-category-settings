@@ -1,34 +1,189 @@
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-input/paper-input-behavior.html">
+
+<link rel="import" href="../iron-form/iron-form.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+
+<link rel="import" href="../ct-currency-behaviour/ct-currency-behaviour.html">
+<link rel="import" href="../ct-editable-switcher/ct-editable-switcher.html">
+<link rel="import" href="../shared-styles/ct-application-theme.html">
+<link rel="import" href="../ct-setting-api/ct-setting-api.html">
 
 <!--
-`ct-category-settings`
-Component for managing category settings
+`ct-view-settings-fees`
+Element to view fees in settings on the Centular platform
 
 @demo demo/index.html
 -->
 
-<dom-module id="ct-category-settings">
+<dom-module id="ct-view-settings-fees">
+
   <template>
-    <style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <style is="global-styles">
       :host {
         display: block;
+        --paper-input-container:{
+          padding: 0 !important;
+        };
+        paper-input-container:{
+          padding: 0 !important;
+        };
+      }
+      .vertical-middle {
+        vertical-align: middle;
+        display: table-cell;
+      }
+      .vertical-middle-container {
+        height: 62px;
+        display: table;
+        float: none;
+        table-layout: fixed;
+      }
+
+      .row-striped:nth-of-type(odd){
+        background-color: #efefef;
+      }
+
+      .row-striped:nth-of-type(even){
+        background-color: #ffffff;
+      }
+      .fees-container .row {
+        /*display: flex;*/
+        align-items: center;
+      }
+      paper-input-container.input-element {
+        padding: 0 !important;
       }
     </style>
-    <h2>Hello [[prop1]]!</h2>
+
+    <div class="container-fluid fees-container">
+
+      <div class="row">
+        <div class="col-sm-2 col-sm-offset-10">
+          <paper-button
+                  class$="btn btn-block [[_computeBtnStyle(_isStateEdit)]]"
+                  on-tap="_editBtnHandler"
+                  raised>
+            [[_computeButtonText(_isStateEdit)]]
+          </paper-button>
+        </div>
+
+      </div>
+
+      <form class="row" is="iron-form" method="PUT">
+        <div class="col-xs-12 col-sm-12 col-md-9">
+          <div class="row row-striped">
+            <div class="col-sm-4">
+              <div class="vertical-middle-container">
+                <span class="vertical-middle">[[ keyName ]]</span>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <ct-editable-switcher edit-mode$="[[_isStateEdit]]">
+                <paper-input
+                        class="input-element"
+                        type="text"
+                        no-label
+                        value="[[ _getValueForKey("easyPayFee") ]]">
+                  <div prefix>R </div>
+                </paper-input>
+              </ct-editable-switcher>
+            </div>
+            <div class="col-sm-1">
+              <div class="text-center vertical-middle-container"><span class="vertical-middle">+</span></div>
+            </div>
+            <div class="col-sm-3">
+              <ct-editable-switcher edit-mode$="[[_isStateEdit]]" class="text-right">
+                <paper-input
+                        class="input-element"
+                        type="text"
+                        no-label
+                        value="">
+                  <div suffix>%</div>
+                </paper-input>
+              </ct-editable-switcher>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
   </template>
 
   <script>
-    Polymer({
+      Polymer({
 
-      is: 'ct-category-settings',
+          is: 'ct-category-settings',
+          behaviors: [CurrencyBehaviours.CurrencyFormatBehaviour],
 
-      properties: {
-        prop1: {
-          type: String,
-          value: 'ct-category-settings',
-        },
-      },
+          properties: {
+              settingsData : Object,
+              _isStateEdit : {
+                  type: Boolean,
+                  value: function() {
+                      return false;
+                  },
+              },
 
-    });
+
+          },
+
+          _computeReadOnly : function(status){
+              return (!status);
+          },
+
+          _computeButtonText: function(isEdit){
+              return (isEdit) ? 'Save Data' : 'Edit Data';
+          },
+
+          _computeBtnStyle : function(isEdit){
+              return (isEdit) ? "btn-primary" : "btn-default";
+          },
+
+          _toggleStatus : function(){
+              this._isStateEdit = !this._isStateEdit;
+          },
+
+          _editBtnHandler : function(){
+              var form = this.$$('form');
+              if(this._isStateEdit){
+                  if(form.validate()){
+                      form.submit();
+                  }
+              } else {
+                  this._toggleStatus();
+              }
+          },
+          _formHandler : function(e){
+
+              var form = this.$$('form').serialize(),
+                  params = {};
+
+              e.preventDefault();
+          },
+          _getSettingsByCategory : function(){
+              this.$.settingApi.getSettingData()
+                  .then(function (request) {
+                  this._feeOptionList = request.response.results;
+                          }.bind(this))
+
+                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load option', type: 'danger'}))
+                  .finally(this.set.bind(this, 'refreshing', false));
+          },
+
+          _updateSetting : function () {
+            this.$.settingApi.updateSettingData()
+            /* needs a setting type to bind to in the toats eg 'Successfully updated Fees' */
+            .then(this.fire.bind(this, 'toast', {message: 'Successfully updated', type: 'success'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Error updating.', type: 'danger'}))
+                  .finally(function(){
+                      this.refreshing = false;
+                  });
+          },
+
+      });
   </script>
 </dom-module>
