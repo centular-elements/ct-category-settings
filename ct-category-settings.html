@@ -4,6 +4,10 @@
 <link rel="import" href="../paper-input/paper-input-behavior.html">
 
 <link rel="import" href="../iron-form/iron-form.html">
+
+<link rel="import" href="/bower_components/iron-component-page/iron-component-page.html">
+
+
 <link rel="import" href="../iron-icon/iron-icon.html">
 
 <link rel="import" href="../ct-currency-behaviour/ct-currency-behaviour.html">
@@ -11,14 +15,15 @@
 <link rel="import" href="../shared-styles/ct-application-theme.html">
 <link rel="import" href="../ct-setting-api/ct-setting-api.html">
 
+
 <!--
-`ct-view-settings-fees`
-Element to view fees in settings on the Centular platform
+`ct-category-settings`
+Component for managing category settings
 
 @demo demo/index.html
 -->
 
-<dom-module id="ct-view-settings-fees">
+<dom-module id="ct-category-settings">
 
   <template>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -62,7 +67,7 @@ Element to view fees in settings on the Centular platform
 
     <div class="container-fluid fees-container">
 
-      <div class="row">
+      <!-- <div class="row">
         <div class="col-sm-2 col-sm-offset-10">
           <paper-button
                   class$="btn btn-block [[_computeBtnStyle(_isStateEdit)]]"
@@ -72,7 +77,7 @@ Element to view fees in settings on the Centular platform
           </paper-button>
         </div>
 
-      </div>
+      </div> -->
 
       <form class="row" is="iron-form" method="PUT">
         <div class="col-xs-12 col-sm-12 col-md-9">
@@ -167,9 +172,8 @@ Element to view fees in settings on the Centular platform
           _getSettingsByCategory : function(){
               this.$.settingApi.getSettingData()
                   .then(function (request) {
-                  this._feeOptionList = request.response.results;
+                  this._settingList = request.response.results;
                           }.bind(this))
-
                   .catch(this.fire.bind(this, 'toast', {message: 'Failed to load option', type: 'danger'}))
                   .finally(this.set.bind(this, 'refreshing', false));
           },
@@ -183,7 +187,6 @@ Element to view fees in settings on the Centular platform
                       this.refreshing = false;
                   });
           },
-
       });
   </script>
 </dom-module>
