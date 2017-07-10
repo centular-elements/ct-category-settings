@@ -5,9 +5,6 @@
 
 <link rel="import" href="../iron-form/iron-form.html">
 
-<link rel="import" href="/bower_components/iron-component-page/iron-component-page.html">
-
-
 <link rel="import" href="../iron-icon/iron-icon.html">
 
 <link rel="import" href="../ct-currency-behaviour/ct-currency-behaviour.html">
@@ -64,7 +61,7 @@ Component for managing category settings
         padding: 0 !important;
       }
     </style>
-
+    <ct-setting-api id="settingApi"></ct-setting-api>
     <div class="container-fluid fees-container">
 
       <!-- <div class="row">
@@ -126,6 +123,7 @@ Component for managing category settings
 
           properties: {
               settingsData : Object,
+              category: String,
               _isStateEdit : {
                   type: Boolean,
                   value: function() {
@@ -169,8 +167,34 @@ Component for managing category settings
 
               e.preventDefault();
           },
-          _getSettingsByCategory : function(){
-              this.$.settingApi.getSettingData()
+          ready : function(){
+              this.init();
+          },
+
+          refresh: function() {
+              this.init();
+          },
+
+          init : function(){
+              this.refreshing = true;
+              this._getSettingsByCategory(this.category)
+          },
+
+          _addSetting : function (params) {
+            var body = {};
+            body.key = params.key;
+            body.value = params.value;
+            body.category = params.category;
+            this.$.settingApi.addSetting(JSON.stringify(body))
+            .then(this.fire.bind(this, 'toast', {message: 'Successfully added new Setting.', type: 'success'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Error adding Setting.', type: 'danger'}))
+                  .finally(function(){
+                      this.refreshing = false;
+                  });
+          },
+
+          _getSettingsByCategory : function(category) {
+              this.$.settingApi.getSettingsByCategory(category)
                   .then(function (request) {
                   this._settingList = request.response.results;
                           }.bind(this))
