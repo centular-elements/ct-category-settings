@@ -4,14 +4,13 @@
 <link rel="import" href="../paper-input/paper-input-behavior.html">
 
 <link rel="import" href="../iron-form/iron-form.html">
-
 <link rel="import" href="../iron-icon/iron-icon.html">
 
 <link rel="import" href="../ct-currency-behaviour/ct-currency-behaviour.html">
 <link rel="import" href="../ct-editable-switcher/ct-editable-switcher.html">
 <link rel="import" href="../shared-styles/ct-application-theme.html">
-<link rel="import" href="../ct-setting-api/ct-setting-api.html">
 
+<link rel="import" href="../ct-setting-api/ct-setting-api.html">
 
 <!--
 `ct-category-settings`
@@ -21,10 +20,8 @@ Component for managing category settings
 -->
 
 <dom-module id="ct-category-settings">
-
   <template>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
     <style is="global-styles">
       :host {
         display: block;
@@ -64,54 +61,45 @@ Component for managing category settings
     <ct-setting-api id="settingApi"></ct-setting-api>
     <div class="container-fluid fees-container">
 
-      <!-- <div class="row">
-        <div class="col-sm-2 col-sm-offset-10">
-          <paper-button
-                  class$="btn btn-block [[_computeBtnStyle(_isStateEdit)]]"
-                  on-tap="_editBtnHandler"
-                  raised>
-            [[_computeButtonText(_isStateEdit)]]
-          </paper-button>
-        </div>
-
-      </div> -->
-
-      <form class="row" is="iron-form" method="PUT">
-        <div class="col-xs-12 col-sm-12 col-md-9">
-          <div class="row row-striped">
-            <div class="col-sm-4">
-              <div class="vertical-middle-container">
-                <span class="vertical-middle">[[ keyName ]]</span>
+      <div class="row">
+        <div class="col-xs-12">
+          <template is="dom-repeat" items={{_settingCategoryList}}>
+            <div class="row">
+              <div class="col-xs-3 col-input">
+                <div class="bordered-content">
+                  <span>[[item.category]]</span>
+                </div>
               </div>
-            </div>
-            <div class="col-sm-3">
-              <ct-editable-switcher edit-mode$="[[_isStateEdit]]">
-                <paper-input
-                        class="input-element"
-                        type="text"
-                        no-label
-                        value="[[ _getValueForKey("easyPayFee") ]]">
-                  <div prefix>R </div>
-                </paper-input>
-              </ct-editable-switcher>
-            </div>
-            <div class="col-sm-1">
-              <div class="text-center vertical-middle-container"><span class="vertical-middle">+</span></div>
-            </div>
-            <div class="col-sm-3">
-              <ct-editable-switcher edit-mode$="[[_isStateEdit]]" class="text-right">
-                <paper-input
-                        class="input-element"
-                        type="text"
-                        no-label
-                        value="">
-                  <div suffix>%</div>
-                </paper-input>
-              </ct-editable-switcher>
-            </div>
-          </div>
+              <div class="col-xs-3 col-input">
+                <span>[[item.key]]</span>
+              </div>
+              <div class="col-xs-3">
+                <ct-editable-switcher id="[[_computeId(index)]]" value-prop="[[item.value]]" edit-mode$="[[_isStateEdit]]">
+                  <paper-input
+                    class="input-element"
+                    id="item-input-[[index]]"
+                    type="text"
+                    name='value'
+                    required
+                    error-message="Please enter a value"
+                    no-label
+                    value="[[item.value]]"
+                    >
+                  </paper-input>
+                </ct-editable-switcher>
+              </div>
+              <div class="col-xs-3">
+                <paper-button
+                        class$="btn [[_computeBtnStyle(_isStateEdit)]]"
+                        on-tap="_editBtnHandler"
+                        raised>
+                  [[_computeButtonText(_isStateEdit)]]
+                </paper-button>
+              </div>
+              </div>
+          </template>
         </div>
-      </form>
+      </div>
     </div>
   </template>
 
@@ -122,16 +110,34 @@ Component for managing category settings
           behaviors: [CurrencyBehaviours.CurrencyFormatBehaviour],
 
           properties: {
+            _isStatusEdit : {
+                type: Boolean,
+                value: function() {
+                    return false;
+                }
+            },
+            refreshing: {
+                type: Boolean,
+                notify: true
+            },
               settingsData : Object,
+              _settingList : {
+                type: Array,
+                notify: true
+              },
+
               category: String,
+              key: String,
+              value: String,
               _isStateEdit : {
                   type: Boolean,
                   value: function() {
                       return false;
                   },
               },
-
-
+          },
+          _computeId : function(idx){
+              return 'item-'+idx;
           },
 
           _computeReadOnly : function(status){
@@ -146,27 +152,32 @@ Component for managing category settings
               return (isEdit) ? "btn-primary" : "btn-default";
           },
 
-          _toggleStatus : function(){
+          _toggleStatus : function(e){
               this._isStateEdit = !this._isStateEdit;
           },
 
-          _editBtnHandler : function(){
-              var form = this.$$('form');
-              if(this._isStateEdit){
-                  if(form.validate()){
-                      form.submit();
-                  }
-              } else {
-                  this._toggleStatus();
+
+          _editBtnHandler : function(e){
+
+              var switcherID = '#item-'+ e.model.index;
+              var switcher = this.$$(switcherID);
+
+              if(switcher.editMode){
+                if(switcher.validate()){
+                  var inputID = '#item-input-'+ e.model.index;
+                  var value = this.$$(inputID).value;
+                  var key = e.model.item.key;
+                  var category = e.model.item.category;
+                  switcher.editMode = !switcher.editMode;
+                  //send the body for the update
+                  this._updateSetting({"key": key, "category" : category, "value" : value});
+                }
+              }else{
+                switcher.editMode = !switcher.editMode
+                //this._toggleStatus();
               }
           },
-          _formHandler : function(e){
 
-              var form = this.$$('form').serialize(),
-                  params = {};
-
-              e.preventDefault();
-          },
           ready : function(){
               this.init();
           },
@@ -177,7 +188,8 @@ Component for managing category settings
 
           init : function(){
               this.refreshing = true;
-              this._getSettingsByCategory(this.category)
+              this._getSettingsByCategory(this.category);
+              this._getSettings();
           },
 
           _addSetting : function (params) {
@@ -193,17 +205,26 @@ Component for managing category settings
                   });
           },
 
+          _getSettings : function() {
+              this.$.settingApi.getSettings()
+              .then(function (request) {
+              this._settingList = request.response;
+                      }.bind(this))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load fees', type: 'danger'}))
+                  .finally(this.set.bind(this, 'refreshing', false));
+          },
+
           _getSettingsByCategory : function(category) {
               this.$.settingApi.getSettingsByCategory(category)
                   .then(function (request) {
-                  this._settingList = request.response.results;
+                  this._settingCategoryList = request.response;
                           }.bind(this))
                   .catch(this.fire.bind(this, 'toast', {message: 'Failed to load option', type: 'danger'}))
                   .finally(this.set.bind(this, 'refreshing', false));
           },
 
-          _updateSetting : function () {
-            this.$.settingApi.updateSettingData()
+          _updateSetting : function (updateSetting) {
+            this.$.settingApi.updateSetting(updateSetting)
             /* needs a setting type to bind to in the toats eg 'Successfully updated Fees' */
             .then(this.fire.bind(this, 'toast', {message: 'Successfully updated', type: 'success'}))
                   .catch(this.fire.bind(this, 'toast', {message: 'Error updating.', type: 'danger'}))
