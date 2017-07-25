@@ -154,7 +154,7 @@ Component for managing category settings
               .then(function (request) {
               this._settingList = request.response;
                       }.bind(this))
-                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load setting.', type: 'danger'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load settings.', type: 'danger'}))
                   .finally(this.set.bind(this, 'refreshing', false));
           },
 
@@ -163,7 +163,7 @@ Component for managing category settings
                   .then(function (request) {
                   this._settingCategoryList = request.response;
                           }.bind(this))
-                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load setting.', type: 'danger'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load settings.', type: 'danger'}))
                   .finally(this.set.bind(this, 'refreshing', false));
           },
 
