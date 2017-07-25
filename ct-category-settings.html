@@ -8,6 +8,7 @@
 
 <link rel="import" href="../ct-currency-behaviour/ct-currency-behaviour.html">
 <link rel="import" href="../ct-editable-switcher/ct-editable-switcher.html">
+<link rel="import" href="../ct-setting-item/ct-setting-item.html">
 <link rel="import" href="../shared-styles/ct-application-theme.html">
 
 <link rel="import" href="../ct-setting-api/ct-setting-api.html">
@@ -57,47 +58,34 @@ Component for managing category settings
       paper-input-container.input-element {
         padding: 0 !important;
       }
+      .padding-bottom-20 {
+        padding-bottom:20px;
+      }
     </style>
+
     <ct-setting-api id="settingApi"></ct-setting-api>
     <div class="container-fluid fees-container">
-
       <div class="row">
         <div class="col-xs-12">
-          <template is="dom-repeat" items={{_settingCategoryList}}>
-            <div class="row">
-              <div class="col-xs-3 col-input">
-                <div class="bordered-content">
-                  <span>[[item.category]]</span>
+          <div class="row padding-bottom-20">
+            <div class="col-xs-3 col-input">
+              <div class="bordered-content ">
+                <span  disabled$="[[ !_isStateEdit ]]">[[_capataliseString(category)]]</span>
+              </div>
+            </div>
+            <div class="col-xs-9">
+              <template is="dom-repeat" items={{_settingCategoryList}}>
+                <div class="row">
+                  <div class="col-xs-6 col-input">
+                    <p>[[_capataliseString(item.key)]]</p>
+                  </div>
+                  <div class="col-xs-6 col-input">
+                    <ct-setting-item key=[[item.key]] value=[[item.value]] category=[[item.category]]></ct-setting-item>
+                  </div>
                 </div>
-              </div>
-              <div class="col-xs-3 col-input">
-                <span>[[item.key]]</span>
-              </div>
-              <div class="col-xs-3">
-                <ct-editable-switcher id="[[_computeId(index)]]" value-prop="[[item.value]]" edit-mode$="[[_isStateEdit]]">
-                  <paper-input
-                    class="input-element"
-                    id="item-input-[[index]]"
-                    type="text"
-                    name='value'
-                    required
-                    error-message="Please enter a value"
-                    no-label
-                    value="[[item.value]]"
-                    >
-                  </paper-input>
-                </ct-editable-switcher>
-              </div>
-              <div class="col-xs-3">
-                <paper-button
-                        class$="btn [[_computeBtnStyle(_isStateEdit)]]"
-                        on-tap="_editBtnHandler"
-                        raised>
-                  [[_computeButtonText(_isStateEdit)]]
-                </paper-button>
-              </div>
-              </div>
-          </template>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -110,12 +98,7 @@ Component for managing category settings
           behaviors: [CurrencyBehaviours.CurrencyFormatBehaviour],
 
           properties: {
-            _isStatusEdit : {
-                type: Boolean,
-                value: function() {
-                    return false;
-                }
-            },
+
             refreshing: {
                 type: Boolean,
                 notify: true
@@ -136,6 +119,14 @@ Component for managing category settings
                   },
               },
           },
+          listeners: {
+             'edit' : '_updateSetting'
+          },
+
+          _capataliseString(str) {
+            str = str.replace(/-/g, ' ');
+            return str.charAt(0).toUpperCase() + str.slice(1);
+          },
           _computeId : function(idx){
               return 'item-'+idx;
           },
@@ -144,38 +135,45 @@ Component for managing category settings
               return (!status);
           },
 
-          _computeButtonText: function(isEdit){
-              return (isEdit) ? 'Save Data' : 'Edit Data';
+          _computeButtonText: function(index){
+              var inputID = '#item-input-'+ index;
+              return (!this.$$(inputID).disabled) ? 'Save' : 'Edit';
           },
 
-          _computeBtnStyle : function(isEdit){
-              return (isEdit) ? "btn-primary" : "btn-default";
-          },
-
-          _toggleStatus : function(e){
-              this._isStateEdit = !this._isStateEdit;
+          _computeBtnStyle : function(index){
+            console.log(index);
+            var bid = '#item-button-'+ index;
+            console.log(bid);
+            var button = this.$$(bid);
+            if(button===null) {
+              return "btn-primary";
+            }
+            else {
+              return (button.editMode) ? "btn-primary" : "btn-default";
+            }
           },
 
 
           _editBtnHandler : function(e){
 
-              var switcherID = '#item-'+ e.model.index;
-              var switcher = this.$$(switcherID);
 
-              if(switcher.editMode){
-                if(switcher.validate()){
                   var inputID = '#item-input-'+ e.model.index;
                   var value = this.$$(inputID).value;
                   var key = e.model.item.key;
                   var category = e.model.item.category;
-                  switcher.editMode = !switcher.editMode;
+                  // switcher.editMode = !switcher.editMode;
+                  if(this.$$(inputID).disabled != true) {
+                  this.$$(inputID).disabled=true;
                   //send the body for the update
                   this._updateSetting({"key": key, "category" : category, "value" : value});
-                }
-              }else{
-                switcher.editMode = !switcher.editMode
-                //this._toggleStatus();
-              }
+
+                  }
+                  else {
+
+                    this.$$(inputID).disabled=false;
+                  }
+
+
           },
 
           ready : function(){
@@ -224,7 +222,7 @@ Component for managing category settings
           },
 
           _updateSetting : function (updateSetting) {
-            this.$.settingApi.updateSetting(updateSetting)
+            this.$.settingApi.updateSetting(updateSetting.detail)
             /* needs a setting type to bind to in the toats eg 'Successfully updated Fees' */
             .then(this.fire.bind(this, 'toast', {message: 'Successfully updated', type: 'success'}))
                   .catch(this.fire.bind(this, 'toast', {message: 'Error updating.', type: 'danger'}))
