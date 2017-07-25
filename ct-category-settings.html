@@ -70,7 +70,7 @@ Component for managing category settings
           <div class="row padding-bottom-20">
             <div class="col-xs-3 col-input">
               <div class="bordered-content ">
-                <span  disabled$="[[ !_isStateEdit ]]">[[_capataliseString(category)]]</span>
+                <span>[[_capataliseString(category)]]</span>
               </div>
             </div>
             <div class="col-xs-9">
@@ -112,12 +112,6 @@ Component for managing category settings
               category: String,
               key: String,
               value: String,
-              _isStateEdit : {
-                  type: Boolean,
-                  value: function() {
-                      return false;
-                  },
-              },
           },
           listeners: {
              'edit' : '_updateSetting'
@@ -126,54 +120,6 @@ Component for managing category settings
           _capataliseString(str) {
             str = str.replace(/-/g, ' ');
             return str.charAt(0).toUpperCase() + str.slice(1);
-          },
-          _computeId : function(idx){
-              return 'item-'+idx;
-          },
-
-          _computeReadOnly : function(status){
-              return (!status);
-          },
-
-          _computeButtonText: function(index){
-              var inputID = '#item-input-'+ index;
-              return (!this.$$(inputID).disabled) ? 'Save' : 'Edit';
-          },
-
-          _computeBtnStyle : function(index){
-            console.log(index);
-            var bid = '#item-button-'+ index;
-            console.log(bid);
-            var button = this.$$(bid);
-            if(button===null) {
-              return "btn-primary";
-            }
-            else {
-              return (button.editMode) ? "btn-primary" : "btn-default";
-            }
-          },
-
-
-          _editBtnHandler : function(e){
-
-
-                  var inputID = '#item-input-'+ e.model.index;
-                  var value = this.$$(inputID).value;
-                  var key = e.model.item.key;
-                  var category = e.model.item.category;
-                  // switcher.editMode = !switcher.editMode;
-                  if(this.$$(inputID).disabled != true) {
-                  this.$$(inputID).disabled=true;
-                  //send the body for the update
-                  this._updateSetting({"key": key, "category" : category, "value" : value});
-
-                  }
-                  else {
-
-                    this.$$(inputID).disabled=false;
-                  }
-
-
           },
 
           ready : function(){
