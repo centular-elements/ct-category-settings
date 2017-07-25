@@ -142,8 +142,8 @@ Component for managing category settings
             body.value = params.value;
             body.category = params.category;
             this.$.settingApi.addSetting(JSON.stringify(body))
-            .then(this.fire.bind(this, 'toast', {message: 'Successfully added new Setting.', type: 'success'}))
-                  .catch(this.fire.bind(this, 'toast', {message: 'Error adding Setting.', type: 'danger'}))
+            .then(this.fire.bind(this, 'toast', {message: 'Successfully added new setting.', type: 'success'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Error adding setting.', type: 'danger'}))
                   .finally(function(){
                       this.refreshing = false;
                   });
@@ -154,7 +154,7 @@ Component for managing category settings
               .then(function (request) {
               this._settingList = request.response;
                       }.bind(this))
-                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load fees', type: 'danger'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load setting.', type: 'danger'}))
                   .finally(this.set.bind(this, 'refreshing', false));
           },
 
@@ -163,15 +163,15 @@ Component for managing category settings
                   .then(function (request) {
                   this._settingCategoryList = request.response;
                           }.bind(this))
-                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load option', type: 'danger'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Failed to load setting.', type: 'danger'}))
                   .finally(this.set.bind(this, 'refreshing', false));
           },
 
           _updateSetting : function (updateSetting) {
             this.$.settingApi.updateSetting(updateSetting.detail)
             /* needs a setting type to bind to in the toats eg 'Successfully updated Fees' */
-            .then(this.fire.bind(this, 'toast', {message: 'Successfully updated', type: 'success'}))
-                  .catch(this.fire.bind(this, 'toast', {message: 'Error updating.', type: 'danger'}))
+            .then(this.fire.bind(this, 'toast', {message: 'Successfully updated setting.', type: 'success'}))
+                  .catch(this.fire.bind(this, 'toast', {message: 'Error updating setting.', type: 'danger'}))
                   .finally(function(){
                       this.refreshing = false;
                   });
